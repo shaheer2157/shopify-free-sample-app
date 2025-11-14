@@ -1,0 +1,21 @@
+query CartTransformRunInput {
+  cart {
+    lines {
+      id
+      attribute(key: "_free_sample") {
+        key
+        value
+      }
+      merchandise {
+        __typename
+        ... on ProductVariant {
+          id
+          product {
+            title
+            handle
+          }
+        }
+      }
+    }
+  }
+}

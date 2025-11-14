@@ -1,0 +1,195 @@
+{% comment %}
+  Free Sample Products Block
+{% endcomment %}
+{% comment %} 🟢 KEEN SLIDER STYLES {% endcomment %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/keen-slider@6/keen-slider.min.css">
+{{ 'keen-slider.css' | asset_url | stylesheet_tag }}
+
+<div id="free-sample-widget"
+     data-card-bg="{{ block.settings.card_bg_color }}"
+     data-font-color="{{ block.settings.font_color }}"
+     data-font-size="{{ block.settings.font_size }}"
+     data-font-family="{{ block.settings.font_family }}"
+     data-button-bg="{{ block.settings.button_bg_color }}"
+     data-button-color="{{ block.settings.button_text_color }}"
+     data-arrow-bg="{{ block.settings.arrow_bg_color }}"
+     data-arrow-hover-bg="{{ block.settings.arrow_hover_bg_color }}"
+     data-arrow-color="{{ block.settings.arrow_icon_color }}"
+     data-desktop-slides="{{ block.settings.desktop_slides }}"
+     data-tablet-slides="{{ block.settings.tablet_slides }}"
+     data-mobile-slides="{{ block.settings.mobile_slides }}"
+     data-min-subtotal="{{ shop.metafields.free_sample_settings.threshold }}"
+     data-product-limit="{{ shop.metafields.free_sample_settings.product_limit }}"
+     style="
+        background: {{ block.settings.bg_color }};
+        color: {{ block.settings.font_color }};
+        font-family: {{ block.settings.font_family }};
+        font-size: {{ block.settings.font_size }}px;
+        padding: 15px;
+        margin: 20px 0;
+        position: relative;
+        border-radius: 8px;
+     ">
+
+  {% if block.settings.enable_widget %}
+    <h3 style="margin-bottom:15px; font-family:{{ block.settings.font_family }};">{{ block.settings.title }}</h3>
+
+    {% comment %} 🟢 DYNAMIC CONTAINER - Products JavaScript se load hongay {% endcomment %}
+    <div id="free-sample-products-container" class="free-sample-products" style="
+         display:flex;
+         flex-wrap: nowrap;
+         gap:10px;
+         overflow-x:auto;
+         padding-bottom:10px;
+         -webkit-overflow-scrolling: touch;
+         scroll-behavior: smooth;
+    ">
+      {% comment %} Products will be loaded by JavaScript {% endcomment %}
+      <div class="free-sample-loading">Loading free samples...</div>
+    </div>
+  {% endif %}
+</div>
+
+
+{% if template.name == 'cart' %}
+  {{ 'free-sample-cart.js' | asset_url | script_tag }}
+{% endif %}
+
+<script>
+  window.FREE_SAMPLE_THRESHOLD = {{ shop.metafields.free_sample_settings.threshold | default: 0 }};
+  window.FREE_SAMPLE_LIMIT = {{ shop.metafields.free_sample_settings.product_limit | default: 1 }};
+  
+  // 🟢 RESPONSIVE SLIDES CONFIGURATION FROM ADMIN
+  window.SLIDER_CONFIG = {
+    desktopSlides: {{ block.settings.desktop_slides }},
+    tabletSlides: {{ block.settings.tablet_slides }},
+    mobileSlides: {{ block.settings.mobile_slides }},
+  };
+</script>
+
+{% comment %} 🟢 DYNAMIC ARROW COLOR STYLES {% endcomment %}
+<style>
+  :root {
+    --arrow-bg-color: {{ block.settings.arrow_bg_color }};
+    --arrow-hover-bg-color: {{ block.settings.arrow_hover_bg_color }};
+    --arrow-icon-color: {{ block.settings.arrow_icon_color }};
+  }
+  /* Use CSS variables (hex) for theme editor friendliness. Avoid server-side color_to_rgb conversions which
+     can behave inconsistently in preview environments. If you want transparency, pick a more translucent
+     hex in the color picker or we can add a small JS helper to convert hex->rgba later. */
+
+  .free-sample-keen-slider__arrow {
+    background-color: var(--arrow-bg-color) !important;
+    color: var(--arrow-icon-color) !important;
+  }
+
+  .free-sample-keen-slider__arrow:hover:not(:disabled) {
+    background-color: var(--arrow-hover-bg-color) !important;
+  }
+
+  .free-sample-keen-slider__arrow:disabled {
+    background-color: rgba(255,255,255,0.85) !important;
+    color: #999 !important;
+  }
+</style>
+
+{% comment %} 🟢 KEEN SLIDER INITIALIZATION {% endcomment %}
+<script src="https://cdn.jsdelivr.net/npm/keen-slider@6/keen-slider.js"></script>
+{{ 'keen-slider-init.js' | asset_url | script_tag }}
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Keen Slider when cart products are refreshed
+    const observer = new MutationObserver(function(mutations) {
+      mutations.forEach(function(mutation) {
+        if (mutation.type === 'childList' && mutation.target.id === 'free-sample-products-container') {
+          const sliderElement = document.querySelector('.keen-slider.free-sample-keen-slider');
+          if (sliderElement) {
+            // Initialize Keen Slider with custom config from admin
+            if (window.FreeSampleKeenSlider) {
+              const customConfig = {
+                desktopSlides: window.SLIDER_CONFIG?.desktopSlides || 4.5,
+                tabletSlides: window.SLIDER_CONFIG?.tabletSlides || 3.5,
+                mobileSlides: window.SLIDER_CONFIG?.mobileSlides || 2.5,
+              };
+              const slider = new window.FreeSampleKeenSlider(customConfig);
+              slider.init('free-sample-products-container').then(function(success) {
+                if (success) {
+                  console.log('✅ Keen Slider initialized with custom config');
+                }
+              });
+            }
+          }
+        }
+      });
+    });
+
+    const container = document.getElementById('free-sample-products-container');
+    if (container) {
+      observer.observe(container, {
+        childList: true,
+        subtree: false,
+      });
+    }
+
+    // Initial slider setup
+    setTimeout(function() {
+      const sliderElement = document.querySelector('.keen-slider.free-sample-keen-slider');
+      if (sliderElement && window.FreeSampleKeenSlider) {
+        const customConfig = {
+          desktopSlides: window.SLIDER_CONFIG?.desktopSlides || 4.5,
+          tabletSlides: window.SLIDER_CONFIG?.tabletSlides || 3.5,
+          mobileSlides: window.SLIDER_CONFIG?.mobileSlides || 2.5,
+        };
+        const slider = new window.FreeSampleKeenSlider(customConfig);
+        slider.init('free-sample-products-container').then(function(success) {
+          if (success) {
+            console.log('✅ Initial Keen Slider setup with custom config');
+          }
+        });
+      }
+    }, 500);
+  });
+</script>
+
+{% comment %} 🟢 REMOVE: Static product rendering and JavaScript {% endcomment %}
+
+{% schema %}
+{
+  "name": "Free Sample Products",
+  "target": "section",
+  "settings": [
+    { "type": "checkbox", "id": "enable_widget", "label": "Enable Free Sample Widget", "default": true },
+    { "type": "text", "id": "title", "label": "Widget Title", "default": "Choose Your Free Sample" },
+    
+    { "type": "header", "content": "🎨 Carousel Arrow Settings" },
+    { "type": "color", "id": "arrow_bg_color", "label": "Arrow Background Color", "default": "#000000" },
+    { "type": "color", "id": "arrow_hover_bg_color", "label": "Arrow Hover Background Color", "default": "#333333" },
+    { "type": "color", "id": "arrow_icon_color", "label": "Arrow Icon Color", "default": "#ffffff" },
+    
+    { "type": "header", "content": "📱 Responsive Slides Per View" },
+    { "type": "range", "id": "desktop_slides", "label": "Desktop Slides (1025px+)", "min": 1, "max": 8, "step": 0.5, "default": 4.5 },
+    { "type": "range", "id": "tablet_slides", "label": "Tablet Slides (769-1024px)", "min": 1, "max": 6, "step": 0.5, "default": 3.5 },
+    { "type": "range", "id": "mobile_slides", "label": "Mobile Slides (≤768px)", "min": 1, "max": 4, "step": 0.5, "default": 2.5 },
+    
+    { "type": "header", "content": "🎨 General Styling" },
+    { "type": "select", "id": "font_family", "label": "Font Family", "default": "Arial, sans-serif",
+      "options": [
+        { "value": "Arial, sans-serif", "label": "Arial" },
+        { "value": "Helvetica, sans-serif", "label": "Helvetica" },
+        { "value": "Poppins, sans-serif", "label": "Poppins" },
+        { "value": "Roboto, sans-serif", "label": "Roboto" },
+        { "value": "Open Sans, sans-serif", "label": "Open Sans" },
+        { "value": "Georgia, serif", "label": "Georgia" },
+        { "value": "Times New Roman, serif", "label": "Times New Roman" }
+      ]
+    },
+    { "type": "color", "id": "bg_color", "label": "Section Background Color", "default": "#f9f9f9" },
+    { "type": "color", "id": "card_bg_color", "label": "Product Card Background Color", "default": "#ffffff" },
+    { "type": "color", "id": "font_color", "label": "Font Color", "default": "#000000" },
+    { "type": "range", "id": "font_size", "label": "Font Size", "min": 12, "max": 24, "step": 1, "default": 14, "unit": "px" },
+    { "type": "color", "id": "button_bg_color", "label": "Button Background Color", "default": "#000000" },
+    { "type": "color", "id": "button_text_color", "label": "Button Text Color", "default": "#ffffff" }
+  ]
+}
+{% endschema %}
